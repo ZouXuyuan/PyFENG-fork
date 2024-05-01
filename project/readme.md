@@ -6,13 +6,9 @@
 </font>
 
 
-$$
-d S_t=r S_t d t+L\left(t, S_t\right) \sqrt{V_t} S_t d W_{1 t}
-$$
+$$d S_t=r S_t d t+L\left(t, S_t\right) \sqrt{V_t} S_t d W_{1 t}$$
 
-$$
-d V_t=a\left(b-V_t\right) d_t+\sigma_v \sqrt{V_t} d W_{2 t}
-$$
+$$d V_t=a\left(b-V_t\right) d_t+\sigma_v \sqrt{V_t} d W_{2 t}$$
 
 
 
