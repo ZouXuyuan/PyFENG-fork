@@ -18,6 +18,8 @@ $$
 C(t, K)=\frac{B_{t_0}}{B_t} E\left[\left(S_t-K\right)^{+}\right],
 $$
 <font size=2> Differentiating the the above equation, and using Fubini's theorem, we get, </font>
+
+
 $$
 d C(t, K)=-\frac{r}{M_t} E\left[\left(S_t-K\right)^{+}\right] d t+\frac{1}{M_t} E\left[d\left(S_t-K\right)^{+}\right] .
 $$
