@@ -28,8 +28,9 @@ print('true price:', m.price(strike, spot, texp))
 from heston_mc import HestonMcAndersen2008
 
 m = HestonMcAndersen2008(sigma, vov=vov, mr=mr, rho=rho)
-m.set_num_params(n_path=1e5, dt=1 / 8, rn_seed=123456)
-m.price(strike, spot, texp)
+m.set_num_params(n_path=1e2, dt=1 / 8, rn_seed=123456)
+# m.price(strike, spot, texp)
+# print('true price:', m.price(strike, spot, texp))
 print('end')
 
 # %%
