@@ -7,11 +7,17 @@
 
 
 $$
-d S_t=r S_t d t+L\left(t, S_t\right) \sqrt{V_t} S_t d W_{1 t} \\
+d S_t=r S_t d t+L\left(t, S_t\right) \sqrt{V_t} S_t d W_{1 t}
+$$
+
+$$
 d V_t=a\left(b-V_t\right) d_t+\sigma_v \sqrt{V_t} d W_{2 t}
 $$
 
+
+
 ## 1.2 Leverage function
+
 ### 1.2.1 Derivation of leverage function
 <font size=2> Let the price of the European call option be　</font>
 $$
