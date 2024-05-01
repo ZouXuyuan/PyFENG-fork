@@ -4,6 +4,8 @@
 ## 1.1 Heston-Dupire Model
 <font size=2 >The Heston-Dupire immediate local volatility model is a model that combines the local volatility obtained from the Dupire formula in its unparameterized form with the Heston stochastic volatility model.
 </font>
+
+
 $$
 \left\{\begin{array}{l}
 d S_t=r S_t d t+L\left(t, S_t\right) \sqrt{V_t} S_t d W_{1 t}, \\
