@@ -131,8 +131,7 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
         lT = len(TT)
         if abs(t - 1) < 10**(-6):
             t = 1 - 10**(-5)
-        t_real = 20 * t
-
+        t_real =t
         x = s -np.log(S0)
 
         if t_real < TT[0]:
@@ -153,32 +152,30 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
         sign = np.sqrt(max(p[i, 0] + p[i, 1] * (p[i, 2] * (x - p[i, 3]) + np.sqrt(max((x - p[i, 3])**2 + p[i, 4],0))), 0)) / np.sqrt(TT[i] / 365)
         sign_1 = np.sqrt(max(p[i + 1, 0] + p[i + 1, 1] * (p[i + 1, 2] * (x - p[i + 1, 3]) + np.sqrt(max((x - p[i + 1, 3])**2 + p[i + 1, 4], 0))), 0)) / np.sqrt(TT[i + 1] / 365)
         #SVIVol = np.sqrt(max(p[0] + p[1] * (p[2] * (k[j] - p[3]) + np.sqrt(max((k[j] - p[3]) ** 2 + p[4], 0))), 0)) / np.sqrt(TT[i] / 365)  # max is to avoid error
-        sign = max(sign, 1e-6) #!!!!!!!!!!!!!
-        sign_1 = max(sign_1, 1e-6) #!!!!!!!!!!!!!!!!1
+        sign = max(sign, 1e-6)
+        sign_1 = max(sign_1, 1e-6)
         sig = taon * sign + taon_1 * sign_1
 
         sig_T = (sign_1 - sign) / (TT[i + 1] - TT[i])
 
-        fn = (p[i + 1, 1] / (2 * sign)) * (p[i, 2] + (x - p[i, 3]) / np.sqrt(max((x - p[i, 3])**2 + p[i, 4], 1e-6))) #!!!!!!!!!!!!!!!!!!!
-        fn_1 = (p[i + 1, 1] / (2 * sign_1)) * (p[i + 1, 2] + (x - p[i + 1, 3]) / np.sqrt(max((x - p[i + 1, 3])**2 + p[i + 1, 4], 1e-6))) #!!!!!!!!!!!!!!!!!!!!!!!!
-        gn = (p[i, 1] * p[i, 4] / (2 * ((x - p[i, 3])**2 + p[i, 4])**(3 / 2)) - fn**2) / sign
-        gn_1 = (p[i + 1, 1] * p[i + 1, 4] / (2 * ((x - p[i + 1, 3])**2 + p[i + 1, 4])**(3 / 2)) - fn_1**2) / sign_1
+        fn = (p[i + 1, 1] / (2 * sign)) * (p[i, 2] + (x - p[i, 3]) / np.sqrt(max((x - p[i, 3])**2 + p[i, 4], 1e-6)))
+        fn_1 = (p[i + 1, 1] / (2 * sign_1)) * (p[i + 1, 2] + (x - p[i + 1, 3]) / np.sqrt(max((x - p[i + 1, 3])**2 + p[i + 1, 4], 1e-6)))
+        gn = (p[i, 1] * p[i, 4] / (2 *  max(((x - p[i, 3])**2 + p[i, 4]), 1e-6)**(3 / 2)) - fn**2) / sign
+        gn_1 = (p[i + 1, 1] * p[i + 1, 4] / (2 * max(((x - p[i + 1, 3])**2 + p[i + 1, 4]), 1e-6)**(3 / 2)) - fn_1**2) / sign_1
         sig_x = taon * fn + taon_1 * fn_1
         sig_xx = taon * gn + taon_1 * gn_1
 
         d1 = ((r + (sig**2) / 2) * t_real / 365 - x) / (sig * np.sqrt(t_real / 365))
         SigmaLV = np.sqrt(max((sig**2 + 2 * t_real / 365 * sig * (sig_T + r * sig_x)) / ((1 + d1 * np.sqrt(t_real / 365) * sig_x)**2 + sig * t_real / 365 * (sig_xx - sig_x - d1 * np.sqrt(t_real / 365) * (sig_x)**2)), 10**(-5)))
-        if not np.isfinite(SigmaLV):
-            print('!!!!!!!!!!')
+
         return SigmaLV
 
     def cond_spot_sigma(self, texp, var_0):
         tobs = self.tobs(texp)
         dt = np.diff(tobs, prepend=0)
         n_dt = len(dt)
-        p = np.load(r"C:\Users\Ellen\Desktop\课内\研二下\stochasitc\project\波动率数据\para_svi.npy")
+        p = np.load(r".\para_svi.npy")
         spot = 3431.1099
-        #spot = 3475.8389 #!!!!!!!1
         K = np.array([3200, 3250, 3300, 3350, 3400, 3450, 3500, 3550, 3600, 3650, 3700, 3750])
         #K = np.arange(2900, 3500, 50)
         TT = [30,60,90,180,270,365]
@@ -197,8 +194,6 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
         n = self.n_path // bin
 
 
-        # martingale correction
-        #X1 = np.ones(self.n_path) * np.log(spot) # spot price
         X1 = np.ones(self.n_path) * np.log(spot) # spot price
 
         for i in tqdm(range(n_dt)):
@@ -214,20 +209,13 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
 
             for j in range(self.n_path):
                 L[j] = self.LocVolCalibrator((i + 1)*dt[i], X1[j], p, TT, spot, 1) ** 2 / E[j]
-                if not np.isfinite(L[j]):
-                    print('!!!!!!!!!!')
-            x_temp = X.copy()
             X = X  - 0.5 * var_t*dt[i]* L + np.sqrt(var_t*dt[i]*L) * W_1
-            if not np.isfinite(X).all():
-                print('!!!!!!!!!!')
             X1 = np.copy(X)
 
             index = np.argsort(X1)
             for k in range(bin):
                 ee = np.sum(var_t1[index[k * n : (k +1)* n]]) #分段求和
                 E[index[(k - 1) * n : k * n]] = bin / self.n_path * ee
-                if (bin / self.n_path * ee) == 0.:
-                    print('!!!!!!!!!!!!!!!!!')
 
         avgvar /= texp
 
