@@ -4,6 +4,7 @@
 ## 1.1 Heston-Dupire Model
 <font size=2 >The Heston-Dupire immediate local volatility model is a model that combines the local volatility obtained from the Dupire formula in its unparameterized form with the Heston stochastic volatility model.
 </font>
+
 $$
 d S_t=r S_t d t+L\left(t, S_t\right) \sqrt{V_t} S_t d W_{1 t}
 $$
@@ -18,12 +19,12 @@ $$
 
 ### 1.2.1 Derivation of leverage function
 <font size=2> Let the price of the European call option be　</font>
-
-
 $$
 C(t, K)=\frac{B_{t_0}}{B_t} E\left[\left(S_t-K\right)^{+}\right]
 $$
 <font size=2> Differentiating the the above equation, and using Fubini's theorem, we get, </font>
+
+
 $$
 d C(t, K)=-\frac{r}{M_t} E\left[\left(S_t-K\right)^{+}\right] d t+\frac{1}{M_t} E\left[d\left(S_t-K\right)^{+}\right]
 $$
@@ -35,12 +36,10 @@ $$
 $$
 -\frac{\partial C(t, K)}{\partial K}=\frac{1}{B_t} E\left[1_{S_t>K}\right], \frac{\partial C^2(t, K)}{\partial K^2}=\frac{\psi_S}{B_t}
 $$
-
+<font size=2> Then we get the leverage function</font>
 $$
 L^2(t, K)=\frac{\frac{\partial C(t, K)}{\partial t}+r K \frac{\partial C(t, K)}{\partial K}}{\frac{1}{2} K^2 \frac{\partial^2 C(t, K)}{\partial K^2} E\left[V_t \mid S_t=K\right]}=\frac{\sigma_{L V}^2(t, K)}{E\left[V_t \mid S_t=K\right]}
 $$
-
-
 
 ### 1.2.2 Calculation of leverage function
 ### Numerator
@@ -85,15 +84,15 @@ $$
 $$
 
 
+
 # 2. Practice
 ## 2.1 Fitting volatility based on SVI
 <font size=2> We select the CSI 300 put option data on December 29, 2023, and fit the implied volatility surface using the SVI method.
 </font>
 
+![本地路径](./picture/subplot.png)
 
-![本地路径](./picture/subplot.jpg)
-
-![本地路径](./picture/surface.jpg)
+![本地路径](./picture/surface.png)
 
 ## 2.2 Model result
 * <font size=2> strike = np.arange(2900, 3500, 50) </font>
@@ -101,11 +100,17 @@ $$
 ### 2.2.1 Heston model
 
 * <font size=2> Lewis AL (2000) Option valuation under stochastic volatility: with Mathematica code. Finance Press</font>
-![本地路径](./picture/conditional_mc.png)
+![本地路径](./picture/conditional_mc_heston.png)
 
 * <font size=2> Conditional MC for Heston model based on QE discretization scheme by Andersen (2008)</font>
 
-![本地路径](./picture/fft.png)
+![本地路径](./picture/fft_heston.png)
+
+- <font size=2> Milstein for Heston</font>
+
+  ![本地路径](./picture/Milstein_Heston.png)
+
+  
 
 ### 2.2.2 Heston-Dupire
 * <font size=2> Var calculation is based on QE method, and we use Euler method to obtain ST </font>
@@ -114,4 +119,16 @@ $$
 d X_{t}=\left(r-\frac{1}{2} L^{2}\left(t, e^{X_{t}}\right) V_{t}\right) d t+L\left(t, e^{X_{t}}\right), \sqrt{V_{t}} d W_{1 t}
 $$
 
-![本地路径](./picture/res.png)
+![本地路径](./picture/Heston_Dupre.png)
+
+* <font size=2> Milstein for Heston-Dupire </font>
+
+$$
+v_{t+dt} = v_t + \kappa (\theta - v_t) dt + \sigma \sqrt{v_t} dt Z_v + \frac{1}{4} \sigma^2 dt (Z_v^2 - 1)
+$$
+
+$$
+ X_{t+dt} =  X_t + \left(r - \frac{1}{2} v_t{L_t}^2\right) dt + \sqrt{v_t}L_t dt Z_s
+$$
+
+![本地路径](./picture/Milstein_Heston_Dupre.png)

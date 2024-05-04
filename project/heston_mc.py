@@ -131,8 +131,11 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
         lT = len(TT)
         if abs(t - 1) < 10**(-6):
             t = 1 - 10**(-5)
-        t_real =t
-        x = s -np.log(S0)
+        t_real = t
+
+        x = s-np.log(S0)
+        if S0==0:
+            print('!!')
 
         if t_real < TT[0]:
             i = 0
@@ -149,8 +152,8 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
             taon = (TT[i + 1] - t_real) / (TT[i + 1] - TT[i])
             taon_1 = (t_real - TT[i]) / (TT[i + 1] - TT[i])
 
-        sign = np.sqrt(max(p[i, 0] + p[i, 1] * (p[i, 2] * (x - p[i, 3]) + np.sqrt(max((x - p[i, 3])**2 + p[i, 4],0))), 0)) / np.sqrt(TT[i] / 365)
-        sign_1 = np.sqrt(max(p[i + 1, 0] + p[i + 1, 1] * (p[i + 1, 2] * (x - p[i + 1, 3]) + np.sqrt(max((x - p[i + 1, 3])**2 + p[i + 1, 4], 0))), 0)) / np.sqrt(TT[i + 1] / 365)
+        sign = np.sqrt(max(p[i, 0] + p[i, 1] * (p[i, 2] * (x - p[i, 3]) + np.sqrt(max((x - p[i, 3])**2 + p[i, 4],0))), 0)) / np.sqrt(TT[i] / 250)
+        sign_1 = np.sqrt(max(p[i + 1, 0] + p[i + 1, 1] * (p[i + 1, 2] * (x - p[i + 1, 3]) + np.sqrt(max((x - p[i + 1, 3])**2 + p[i + 1, 4], 0))), 0)) / np.sqrt(TT[i + 1] / 250)
         #SVIVol = np.sqrt(max(p[0] + p[1] * (p[2] * (k[j] - p[3]) + np.sqrt(max((k[j] - p[3]) ** 2 + p[4], 0))), 0)) / np.sqrt(TT[i] / 365)  # max is to avoid error
         sign = max(sign, 1e-6)
         sign_1 = max(sign_1, 1e-6)
@@ -160,14 +163,13 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
 
         fn = (p[i + 1, 1] / (2 * sign)) * (p[i, 2] + (x - p[i, 3]) / np.sqrt(max((x - p[i, 3])**2 + p[i, 4], 1e-6)))
         fn_1 = (p[i + 1, 1] / (2 * sign_1)) * (p[i + 1, 2] + (x - p[i + 1, 3]) / np.sqrt(max((x - p[i + 1, 3])**2 + p[i + 1, 4], 1e-6)))
-        gn = (p[i, 1] * p[i, 4] / (2 *  max(((x - p[i, 3])**2 + p[i, 4]), 1e-6)**(3 / 2)) - fn**2) / sign
-        gn_1 = (p[i + 1, 1] * p[i + 1, 4] / (2 * max(((x - p[i + 1, 3])**2 + p[i + 1, 4]), 1e-6)**(3 / 2)) - fn_1**2) / sign_1
+        gn = (p[i, 1] * p[i, 4] / (2 * ((x - p[i, 3])**2 + p[i, 4])**(3 / 2)) - fn**2) / sign
+        gn_1 = (p[i + 1, 1] * p[i + 1, 4] / (2 * ((x - p[i + 1, 3])**2 + p[i + 1, 4])**(3 / 2)) - fn_1**2) / sign_1
         sig_x = taon * fn + taon_1 * fn_1
         sig_xx = taon * gn + taon_1 * gn_1
 
-        d1 = ((r + (sig**2) / 2) * t_real / 365 - x) / (sig * np.sqrt(t_real / 365))
-        SigmaLV = np.sqrt(max((sig**2 + 2 * t_real / 365 * sig * (sig_T + r * sig_x)) / ((1 + d1 * np.sqrt(t_real / 365) * sig_x)**2 + sig * t_real / 365 * (sig_xx - sig_x - d1 * np.sqrt(t_real / 365) * (sig_x)**2)), 10**(-5)))
-
+        d1 = ((r + (sig**2) / 2) * t_real / 250 - x) 
+        SigmaLV = np.sqrt(max((sig**2 + 2 * t_real / 250 * sig * (sig_T + r * sig_x)) / ((1 + d1/sig*sig_x)**2 + sig * t_real / 250 * (sig_xx - sig_x - d1/sig  * (sig_x)**2)), 10**(-6)))
         return SigmaLV
 
     def cond_spot_sigma(self, texp, var_0):
@@ -176,55 +178,52 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
         n_dt = len(dt)
         p = np.load(r".\para_svi.npy")
         spot = 3431.1099
-        K = np.array([3200, 3250, 3300, 3350, 3400, 3450, 3500, 3550, 3600, 3650, 3700, 3750])
+        K = np.arange(2900, 3500, 50)
         #K = np.arange(2900, 3500, 50)
-        TT = [30,60,90,180,270,365]
+        TT = [20, 40, 60, 120,180, 250]
         # TT = [20,40,60,120,180,225]
 
 
         var_t = np.full(self.n_path, var_0)
-        var_t1_ = np.copy(var_t)
+        var_t1 = np.copy(var_t)
         avgvar = np.zeros(self.n_path)
         # martingale correction
         X = np.ones(self.n_path) * np.log(spot) # spot price
 
         E = var_0 * np.ones((self.n_path,))
         L = np.zeros((self.n_path, ))
-        bin = 10
+        bin = 20
         n = self.n_path // bin
 
-
-        X1 = np.ones(self.n_path) * np.log(spot) # spot price
-
-        for i in tqdm(range(n_dt)):
-            var_t, avgvar_inc, extra = self.cond_states_step(dt[i], var_t)
-            var_t1 = np.copy(var_t)
-            avgvar += avgvar_inc * dt[i]
-
+        for i in tqdm(range(1,n_dt)):        
+            for j in range(self.n_path):
+                L[j] = self.LocVolCalibrator((i-1)*dt[i], X[j], p, TT, spot, self.intr) ** 2 / E[j]
+            
+            var_t, _, extra = self.cond_states_step(dt[i], var_t)
             if self.correct_martingale:
                 Z_1 = extra.get('qe_m_corr', None)  # random variable for generate variance
-
+            
             Z_2 = np.random.normal(size=(self.n_path,))          
             W_1 = self.rho * Z_1 + np.sqrt(1 - self.rho**2)*Z_2
-
-            for j in range(self.n_path):
-                L[j] = self.LocVolCalibrator((i + 1)*dt[i], X1[j], p, TT, spot, 1) ** 2 / E[j]
-            X = X  - 0.5 * var_t*dt[i]* L + np.sqrt(var_t*dt[i]*L) * W_1
-            X1 = np.copy(X)
-
-            index = np.argsort(X1)
+            X = X  - 0.5 * var_t1*dt[i]* L + np.sqrt(var_t1*dt[i]*L) * W_1
+            # X = X  - 0.5 * var_t1*dt[i] + np.sqrt(var_t1*dt[i]) * W_1
+            
+            var_t[var_t < 0] = 0
+            index = np.argsort(X)
             for k in range(bin):
-                ee = np.sum(var_t1[index[k * n : (k +1)* n]]) #分段求和
-                E[index[(k - 1) * n : k * n]] = bin / self.n_path * ee
+                ee = np.sum(var_t[index[k * n : (k +1)* n]]) #分段求和
+                E[index[k * n : (k +1) * n]] = bin / self.n_path * ee
 
-        avgvar /= texp
+            var_t1 = var_t
+            
 
         spot_cond = np.exp(X)
         result = []
         for i in range(len(K)):
-            result.append(np.nanmean(np.where(spot_cond - K[i] > 0, spot_cond - K[i], 0))*np.exp(-self.intr * texp))
+            result.append(np.mean(np.maximum(spot_cond - K[i], 0))*np.exp(-self.intr * texp))
         result = np.array(result)
         print('Heston-Dupire: ', result)
+        
 
         sigma_cond = np.sqrt((1.0 - self.rho**2) / var_0 * avgvar)  # normalize by initial variance
 
@@ -235,21 +234,14 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
     #     tobs = self.tobs(texp)
     #     dt = np.diff(tobs, prepend=0)
     #     n_dt = len(dt)
-    #     p = np.load('para_svi.npy')
-    #     spot = 3475.8389
-    #     K = np.array([3200, 3250, 3300, 3350, 3400, 3450, 3500, 3550, 3600, 3650, 3700, 3750])
+    #     p = np.load(r'D:\BBBB\学校课程\ASP\PyFENG-fork-main\PyFENG-fork-main\project\波动率数据\para_svi.npy')
+    #     spot = 3431.1099
+    #     K = np.arange(2900, 3500, 50)
 
     #     var_t = np.full(self.n_path, var_0)
-    #     var_t_ = np.copy(var_t)
     #     avgvar = np.zeros(self.n_path)
     #     # martingale correction
     #     X = np.ones(self.n_path) * np.log(spot) # spot price
-
-    #     var_t1 = np.full(self.n_path, var_0)
-    #     var_t1_ = np.copy(var_t1)
-    #     avgvar1 = np.zeros(self.n_path)
-    #     # martingale correction
-    #     X1 = np.ones(self.n_path) * np.log(spot) # spot price
 
     #     for i in range(n_dt):
     #         var_t, avgvar_inc, extra = self.cond_states_step(dt[i], var_t)
@@ -265,25 +257,12 @@ class HestonMcABC(heston.HestonABC, sv.CondMcBsmABC, abc.ABC):
 
     #     avgvar /= texp
 
-    #     avgvar_m_anal, avgvar_v_anal = self.avgvar_mv(texp)  # analytic mean and variance of avgvar
-    #     # self.result = {**self.result,
-    #     #                'avgvar mean': avgvar_m_anal,
-    #     #                'avgvar mean error': avgvar.mean()/avgvar_m_anal - 1,
-    #     #                'avgvar var': avgvar_v_anal,
-    #     #                'avgvar var error': np.square(avgvar - avgvar_m_anal).mean()/avgvar_v_anal - 1
-    #     #                }
-
-    #     # spot_cond = ((var_t - var_0) + self.mr * texp * (avgvar - self.theta)) / self.vov - 0.5 * self.rho * texp * avgvar
-    #     # spot_cond *= self.rho
-    #     # spot_cond += m_corr
-    #     # np.exp(spot_cond, out=spot_cond)
-
     #     spot_cond = np.exp(X)
     #     result = []
     #     for i in range(len(K)):
     #         result.append(np.mean(np.where(spot_cond - K[i] > 0, spot_cond - K[i], 0))*np.exp(-self.intr * texp))
     #     result = np.array(result)
-    #     print('Heston-Dupire: ', result)
+    #     print('Heston: ', result)
 
     #     sigma_cond = np.sqrt((1.0 - self.rho**2) / var_0 * avgvar)  # normalize by initial variance
 
